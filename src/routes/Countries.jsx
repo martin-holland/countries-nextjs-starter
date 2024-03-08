@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { Form, Spinner } from "react-bootstrap";
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
@@ -9,23 +10,24 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Row from "react-bootstrap/Row";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { getFavouritesFromSource } from "../auth/firebase";
 import { initializeCountries } from "../store/countriesSlice";
-import { addFavourite } from "../store/favouritesSlice";
+import { addFavourite, removeFavourite } from "../store/favouritesSlice";
 
 const Countries = () => {
   const dispatch = useDispatch();
 
   const countriesList = useSelector((state) => state.countries.countries);
+  const favourites = useSelector((state) => state.favourites.favourites);
   const loading = useSelector((state) => state.countries.isLoading);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     dispatch(initializeCountries());
+    dispatch(getFavouritesFromSource());
   }, [dispatch]);
 
-  useEffect(() => {
-    console.log("search: ", search);
-  }, [search]);
+  useEffect(() => {}, [search]);
 
   if (loading) {
     return (
@@ -62,9 +64,19 @@ const Countries = () => {
           .map((country) => (
             <Col className="mt-5" key={country.name.common}>
               <Card className="h-100">
-                <FavoriteIcon
-                  onClick={() => dispatch(addFavourite(country))}
-                ></FavoriteIcon>
+                {favourites.some(
+                  (favourite) => favourite === country.name?.common
+                ) ? (
+                  <FavoriteBorderIcon
+                    onClick={() =>
+                      dispatch(removeFavourite(country.name.common))
+                    }
+                  />
+                ) : (
+                  <FavoriteIcon
+                    onClick={() => dispatch(addFavourite(country.name.common))}
+                  />
+                )}
                 <Link
                   to={`/countries/${country.name.common}`}
                   state={{ country: country }}
